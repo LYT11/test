@@ -1,6 +1,11 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, RouterView } from 'vue-router'
+import { h } from 'vue'
 import { usePermissStore } from '../stores/permiss';
-import Home from '../views/home.vue';
+const Home = () => import('../views/home.vue');
+
+const EmptyRouterView = {
+  render: () => h(RouterView)
+}
 
 const router = createRouter({
   history: createWebHistory(),
@@ -71,6 +76,59 @@ const router = createRouter({
 					},
 					component: () => import('../views/testCases/detail.vue'),
 				},
+				// {
+				// 	path: '/baidu_link',
+				// 	name: 'BaiduLink',
+				// 	meta: {
+				// 		title: '百度官网',
+				// 		icon: 'Link',
+				// 		isExternal: true
+				// 	}
+				// },
+				{
+					path: '/external-iframe',
+					component: () => import('../views/iframe/index.vue'),
+					meta: { title: 'iframe测试' }
+				},
+				{
+          path: '/test',
+					name: 'testModule',
+					redirect: '/testPlan',
+          meta: {
+            title: '文档生成',
+            noAuth: true,
+          },
+          component: EmptyRouterView,
+          children: [
+            {
+              path: 'plan',
+              name: 'testPlan',
+              meta: {
+                title: '测试方案',
+                noAuth: true,
+              },
+              component: () => import('../views/testPlan/index.vue'),
+            },
+            {
+              path: 'report',
+              name: 'testReport',
+              meta: {
+                title: '测试报告',
+                noAuth: true,
+              },
+              component: () => import('../views/testReport/index.vue'),
+						},
+						{
+              path: 'template',
+              name: 'templateManagement',
+              meta: {
+                title: '模板管理',
+                noAuth: true,
+              },
+              component: () => import('../views/templateManagement/index.vue'),
+            }
+          ],
+        },
         {
 					path: '/pageone',
 					name: 'pageone',

@@ -141,6 +141,32 @@
 					</template>
 				</el-table-column>
 				<el-table-column
+					prop="status"
+					label="状态"
+					width="100"
+					align='center'>
+					<template #default="scope">
+            <el-tag size="small" :type="statusType[+(scope.row.status-1)].type">{{statusType[+(scope.row.status-1)].label}}</el-tag>
+          </template>
+				</el-table-column>			
+				<el-table-column
+					prop="failed_reason"
+					label="失败原因"
+					min-width="100"
+					align='center'
+					show-overflow-tooltip>
+					<template #default="scope">
+            {{ scope.row.failed_reason ? scope.row.failed_reason : '--' }}
+          </template>
+				</el-table-column>
+				<el-table-column
+					prop="created_at"
+					label="创建时间"
+					width="140"
+					:formatter="dayFormatter"
+					align='center'>
+				</el-table-column>
+				<el-table-column
 					fixed="right"
 					label="操作"
 					width="220"
@@ -267,15 +293,20 @@
 
 <script setup name="materialAnalysis">
 import { VueDraggable } from 'vue-draggable-plus'
-import { useRouter, useRoute } from 'vue-router'
-import { reactive, ref, onMounted, watch, onUnmounted } from 'vue';
+import { ElMessage } from 'element-plus'
+import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router'
+import { reactive, ref, onMounted, watch, onUnmounted, onActivated, onDeactivated } from 'vue';
+import { timeFormatter } from '@/utils/day.js';
 import { getList, deleteMaterial } from '@/api/materialAnalysis';
 import { getModel, getKnowledge, addTest } from '@/api/testCases';
 
 const router = useRouter()
 const route = useRoute()
 
+const isFirstActivated = ref(true)
+const timer = ref(null)
 const tableHeight = ref(null)
+const isListeningResize = ref(false)
 
 const searchForm = reactive({
 	name: ''
@@ -291,6 +322,17 @@ const pagination = reactive({
 	background: true,
 	layout: 'total, sizes, prev, pager, next, ->, jumper'
 })
+
+const statusType = ref([{
+	type: 'success',
+	label: '完成',
+},{
+	type: 'primary',
+	label: '进行中',
+},{
+	type: 'danger',
+	label: '失败',
+}])
 
 const visibleShow = ref(false)
 const formRef = ref(null)
@@ -361,22 +403,28 @@ const getDataList = async () => {
   }
 }
 
+// 日期转换
+const dayFormatter = (row) => {
+	return timeFormatter(row.create_at)
+}
+
 // 删除
 const handleDelete = (row) => {
 	ElMessageBox.confirm('确定要删除吗？', '提示', {
 		type: 'warning'
 	})
 	.then(async () => {
-		deleteMaterial(row.id).then((res) => {
-			if (res.code === 200) {
-				getDataList()
-				ElMessage.success('删除成功！')
-			} else {
-				ElMessage.error(res.message);
-			}
-		}).catch(() => {});
+		const res = await deleteMaterial(row.id)
+		if (res.code === 200) {
+			getDataList()
+			ElMessage.success('删除成功！')
+		} else {
+			ElMessage.error(res.message || '文件删除失败，请重试！')
+		}
 	})
-	.catch(() => {});
+	.catch(() => {
+		ElMessage.info('已取消删除')
+	})
 }
 
 const onAdd = () => {
@@ -402,11 +450,6 @@ const handleSizeChange = (val) => {
 	getDataList()
 }
 
-const calcTableHeight = () => {
-	const clientHeight = document.documentElement.clientHeight
-	tableHeight.value = clientHeight - 350
-}
-
 const getModels = async () => {
 	const res = await getModel()
 	if (res.code === 200) {
@@ -424,10 +467,10 @@ const getKnowledges = async () => {
 
 const addCases = async (row) => {
 	visibleShow.value = true
-	await getModels()
-	await getKnowledges()
 	addForm.project_name = row.name
 	addForm.requirementFile = row.demand_docx ? row.demand_docx.split(',') : []
+	await getModels()
+	await getKnowledges()
 }
 
 const handleClose = () => {
@@ -470,22 +513,62 @@ const handleSave = async () => {
 	}
 }
 
+const startTimer = () => {
+	if (timer.value) return;
+  timer.value = setInterval(() => {
+    getDataList()
+  }, 30000)
+}
+
+const clearTimer = () => {
+  if (timer.value) {
+    clearInterval(timer.value)
+    timer.value = null
+  }
+}
+
+const calcTableHeight = () => {
+	const clientHeight = document.documentElement.clientHeight
+	tableHeight.value = clientHeight - 350
+}
+
+const bindResize = () => {
+  if (isListeningResize.value) return
+
+  window.addEventListener('resize', calcTableHeight)
+  isListeningResize.value = true
+}
+
+const unbindResize = () => {
+  window.removeEventListener('resize', calcTableHeight)
+	isListeningResize.value = false
+}
+
 onMounted(() => {
 	getDataList()
 	calcTableHeight()
-
-  window.addEventListener('resize', calcTableHeight)
+	startTimer()
+	bindResize()
 })
 
-watch(
-  // 监听路由路径变化
-  () => route.path,
-  () => { getDataList() },
-  { immediate: true }
-)
-
 onUnmounted(() => {
-  window.removeEventListener('resize', calcTableHeight)
+	clearTimer()
+  unbindResize()
+})
+
+onActivated(() => {
+	if (isFirstActivated.value) {
+    isFirstActivated.value = false
+    return
+	}
+	getDataList()
+	startTimer()
+	bindResize()
+})
+
+onDeactivated(() => {
+	clearTimer()
+	unbindResize()
 })
 </script>
 
@@ -501,7 +584,6 @@ onUnmounted(() => {
 .collapse_show_item {
 	display: flex;
 	flex: 1;
-	margin-right: 28px;
 }
 .search-btn {
 	margin-right: 0;

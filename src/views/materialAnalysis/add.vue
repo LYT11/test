@@ -166,6 +166,7 @@
 
 <script setup name="materialAdd">
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { reactive, ref, onMounted } from 'vue';
 import { uploadFile, deleteFile } from '@/api/file';
 import { createMaterial } from '@/api/materialAnalysis';
@@ -620,11 +621,11 @@ const handleSubmit = async () => {
 		if (res.code === 200) {
 			loading.value = false
 			ElMessage.success('新增成功！')
-			router.push({
-				path: '/materialAnalysis/detail',
-				query: { id: res.data.project_id }
-			})
-      // router.push('/materialAnalysis')
+			// router.push({
+			// 	path: '/materialAnalysis/detail',
+			// 	query: { id: res.data.project_id }
+			// })
+      router.push('/materialAnalysis')
     } else {
 			loading.value = false
       ElMessage.error(res.message)

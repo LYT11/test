@@ -1,8 +1,8 @@
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 // 获取当前访问的地址（协议+主机+端口）
 const currentOrigin = window.location.origin;
-console.log('currentOrigin', currentOrigin)
 const service = axios.create({
 	baseURL: import.meta.env.VITE_APP_BASE_API,
 	// baseURL: `${currentOrigin}`,
@@ -40,6 +40,9 @@ service.interceptors.response.use(
 		return res
 	},
 	error => {
+		if (axios.isCancel(error) || error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+      return Promise.reject(error)
+    }
 		if (error.code === 'ECONNABORTED' && error.message.indexOf('timeout') !== -1) {
       ElMessage.error('网络请求超时，请稍后重试')
 		} else {
@@ -48,7 +51,6 @@ service.interceptors.response.use(
 		return Promise.reject(error)
 	}
 )
-
 export default service
 
 

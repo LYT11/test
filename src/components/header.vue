@@ -3,7 +3,7 @@
 		<!-- 折叠按钮 -->
 		<div class="header-left">
 				<img class="logo" src="../assets/image/logo.svg" alt="" />
-				<div class="web-title">后台管理系统</div>
+				<div class="web-title">AITS 一体化测试平台</div>
 				<div class="collapse-btn" @click="collapseChage">
 						<el-icon v-if="sidebar.collapse">
 								<Expand />
@@ -127,7 +127,7 @@ const setFullScreen = () => {
 }
 
 .web-title {
-    margin: 0 40px 0 10px;
+    margin: 0 20px 0 10px;
     font-size: 22px;
 }
 

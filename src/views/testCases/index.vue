@@ -6,7 +6,7 @@
 				<el-form-item label="项目名称:">
 					<el-input v-model="searchForm.name" placeholder="项目名称"></el-input>
 				</el-form-item>
-        <el-form-item label="状态">
+        <el-form-item label="状态:">
           <el-select v-model="searchForm.status" clearable placeholder="请选择状态" style="width: 200px">
             <el-option
               v-for="item in statusOptions"
@@ -97,7 +97,7 @@
 					prop="created_at"
 					label="创建时间"
 					width="140"
-					:formatter="timeFormatter"
+					:formatter="dayFormatter"
 					align='center'>
 				</el-table-column>
 				<el-table-column
@@ -198,11 +198,11 @@
 							/>
 						</el-select>
 					</el-form-item>
-					<el-form-item label="用户输入的信息：" prop="user_info">
+					<el-form-item label="用户提示信息：" prop="user_info">
 						<el-input
 							v-model="addForm.user_info"
 							maxlength="200"
-							placeholder="用户输入的信息"
+							placeholder="用户提示信息"
 							show-word-limit
 							:autosize="{ minRows: 3 }"
 							type="textarea"
@@ -251,10 +251,11 @@
 
 <script setup name="testCases">
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { reactive, ref, onMounted, watch, onUnmounted, onActivated, onDeactivated, nextTick } from 'vue';
+import { timeFormatter } from '@/utils/day.js';
 import { getList, getModel, getKnowledge, addTest, deleteCase, downloadCase } from '@/api/testCases';
 import { uploadFile, deleteFile, getFileUrl, downloadFile } from '@/api/file';
-import dayjs from 'dayjs';
 import { VueDraggable } from 'vue-draggable-plus'
 import VueOfficeDocx from '@vue-office/docx'
 import '@vue-office/docx/lib/index.css'
@@ -404,8 +405,8 @@ const getDataList = async () => {
 }
 
 // 日期转换
-const timeFormatter = (row) => {
-	return dayjs(row.created_at).format('YYYY-MM-DD HH:mm:ss')
+const dayFormatter = (row) => {
+	return timeFormatter(row.created_at)
 }
 
 const handleDetail = (row) => {
@@ -728,7 +729,7 @@ const calcTableHeight = () => {
 
 const bindResize = () => {
   if (isListeningResize.value) return
-
+	console.log('calcTableHeight', calcTableHeight)
   window.addEventListener('resize', calcTableHeight)
   isListeningResize.value = true
 }
@@ -751,6 +752,7 @@ onUnmounted(() => {
 })
 
 onActivated(() => {
+	getDataList()
 	startTimer()
 	bindResize()
 })
@@ -774,7 +776,6 @@ onDeactivated(() => {
 .collapse_show_item {
 	display: flex;
 	flex: 1;
-	margin-right: 28px;
 }
 .search-btn {
 	margin-right: 0;
@@ -784,9 +785,9 @@ onDeactivated(() => {
 	display: flex;
 	justify-content: flex-end;
 }
-.el-form--inline .el-form-item {
-  margin-right: 10px;
-}
+// .el-form--inline .el-form-item {
+//   margin-right: 10px;
+// }
 .file-tip {
 	font-size: 12px;
 	color: #606266;

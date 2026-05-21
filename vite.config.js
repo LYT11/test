@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
       assetsDir: 'static',
       // 对应原 productionSourceMap
       sourcemap: false,
+      chunkSizeWarningLimit: 2000,   // 设为 2MB
       rollupOptions: {
         output: {
           /**
@@ -32,8 +33,10 @@ export default defineConfig(({ mode }) => {
            * @description 2. 如果你不想自定义 chunk 分割策略，可以直接移除这段配置
            */
           manualChunks: {
-            vue: ["vue", "vue-router", "pinia"],
-            element: ["element-plus", "@element-plus/icons-vue"]
+            vue: ['vue', 'vue-router', 'pinia', 'vue-demi'],
+            element: ['element-plus', '@element-plus/icons-vue'],
+            office: ['@vue-office/pdf', '@vue-office/docx', '@vue-office/excel'],
+            utils: ['axios', 'dayjs', 'vue-draggable-plus']
           }
         }
       }
@@ -42,6 +45,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: port,
       open: true,
+      disableHostCheck: true,
       // 对应原 client.overlay
       overlay: {
         warnings: false,
@@ -60,7 +64,7 @@ export default defineConfig(({ mode }) => {
 
     plugins: [
       vue(),
-      vueDevTools(),
+      // vueDevTools(),
       VueSetupExtend(),
       AutoImport({
         resolvers: [ElementPlusResolver()]

@@ -260,9 +260,11 @@
   </div>
 </template>
 
-<script setup name="pageone">
+<script setup name="materialDetail">
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { reactive, ref, onMounted, nextTick } from 'vue';
+import { useTabsStore } from '@/stores/tabs';
 import { getDetail } from '@/api/materialAnalysis';
 import { downloadFile, getFileUrl } from '@/api/file';
 import VueOfficePdf from '@vue-office/pdf'
@@ -271,6 +273,7 @@ import '@vue-office/docx/lib/index.css'
 
 const router = useRouter()
 const route = useRoute()
+const tabsStore = useTabsStore();
 
 const nameId = ref('')
 const downloadLoading = ref({});
@@ -313,7 +316,6 @@ const handlePreviewOpened = async () => {
 }
 
 const previewFile = async (type, id) => {
-  console.log('id', id)
 	const res = await getFileUrl(id)
 	const contentType = res.headers['content-type'] || res.headers['Content-Type']
 	const blob = new Blob([res.data], { type: contentType })
@@ -422,6 +424,13 @@ const handleDownloadFile = async (fileId, fileName) => {
 }
 
 const goBack = () => {
+  const currentPath = route.fullPath
+  console.log('currentPath', currentPath)
+  const index = tabsStore.list.findIndex(item => item.path === currentPath)
+  console.log('index', index)
+  if (index !== -1) {
+    tabsStore.delTabsItem(index)
+  }
   router.push('/materialAnalysis')
 }
 
@@ -432,9 +441,6 @@ const goBack = () => {
   margin-bottom: 20px;
   padding-bottom: 10px;
   border-bottom: 1px solid #e6e6e6;
-}
-.detail-content {
-  // max-width: 800px;
 }
 
 .detail-card {

@@ -94,12 +94,15 @@
 
 <script setup name="testCasesDetail">
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { reactive, ref, onMounted, onUnmounted, watchEffect  } from 'vue';
 import dayjs from 'dayjs';
+import { useTabsStore } from '@/stores/tabs';
 import { getDetail } from '@/api/testCases';
 
 const router = useRouter()
 const route = useRoute()
+const tabsStore = useTabsStore();
 
 const projectId = ref('')
 const projectName = ref('')
@@ -139,6 +142,13 @@ const timeFormatter = (row) => {
 }
 
 const handleReturn = () => {
+  const currentPath = route.fullPath
+  console.log('currentPath', currentPath)
+  const index = tabsStore.list.findIndex(item => item.path === currentPath)
+  console.log('index', index)
+  if (index !== -1) {
+    tabsStore.delTabsItem(index)
+  }
   router.push({
     path: '/testCases'
   })

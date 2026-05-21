@@ -6,9 +6,9 @@
 			:collapse="sidebar.collapse"
 			:background-color="sidebar.bgColor"
 			:text-color="sidebar.textColor"
-			router
+			@select="handleSelect"
 		>
-			<template v-for="item in menuData">
+			<template v-for="item in menuData" :key="item.index">
 				<template v-if="item.children">
 					<el-sub-menu :index="item.index" :key="item.index" v-permiss="item.id">
 						<template #title>
@@ -55,15 +55,52 @@
 <script setup>
 import { computed } from 'vue';
 import { useSidebarStore } from '../stores/sidebar';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { menuData } from '@/components/menu';
 
 const route = useRoute();
+const router = useRouter();
 const onRoutes = computed(() => {
   return route.path;
 });
 
 const sidebar = useSidebarStore();
+
+// 打开外链的方法
+const openExternalLink = (item) => {
+  const { externalUrl, target = '_blank' } = item;
+  if (externalUrl) {
+    window.open(externalUrl, target);
+  } else {
+    console.warn('外链菜单缺少 externalUrl 配置', item);
+	}
+}
+
+const findMenuItem = (items, targetIndex) => {
+  for (const item of items) {
+    if (item.index === targetIndex) return item
+    if (item.children) {
+      const found = findMenuItem(item.children, targetIndex)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+const handleSelect = (index) => {
+	const menuItem = findMenuItem(menuData, index)
+	if (!menuItem) return
+	if (menuItem.isExternal) {
+    openExternalLink(menuItem)
+  } else if (menuItem.isIframe) {
+    router.push({
+      path: menuItem.index,
+      query: { url: menuItem.iframeUrl }
+    })
+  } else if (menuItem.index) {
+    router.push(menuItem.index)
+  }
+}
 </script>
 
 <style scoped>

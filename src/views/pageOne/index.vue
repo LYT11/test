@@ -111,7 +111,7 @@ const onReset = () => {}
 .common-table {
   height: 90%;
 }
-::v-deep .el-table__fixed-right-patch {
+:deep(.el-table__fixed-right-patch) {
 	position: absolute;
 	top: -1px;
 	right: 0;
