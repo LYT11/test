@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => {
       // 代理配置（对应原 proxy）
       proxy: {
         '/api': {
-          target: env.VITE_APP_BASE_API, // 注意：Vite 默认环境变量前缀是 VITE_
+          target: env.VITE_APP_BASE_API,
           secure: false,
           changeOrigin: true
         }
